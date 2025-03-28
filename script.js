@@ -1,43 +1,99 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const imageContainer = document.getElementById("image-container");
     let images = [];
+    let currentIndex = 0;
+    let slideshowInterval;
+    const imageContainer = document.getElementById("image-container");
 
     function checkImages() {
         let i = 1;
-        let foundAll = false;
-
-        images = []; // Reset the list
-        imageContainer.innerHTML = ""; // Clear previous images
-
         function checkNext() {
             let img = new Image();
             img.src = `additional/image${i}.jpg`;
-
             img.onload = function () {
                 images.push(img.src);
-
-                // Create an <img> element and add it to the page
-                let imgElement = document.createElement("img");
-                imgElement.src = img.src;
-                imgElement.alt = `Image ${i}`;
-                imgElement.style.width = "200px"; // Adjust size as needed
-                imgElement.style.margin = "5px";
-
-                imageContainer.appendChild(imgElement);
-
                 i++;
-                checkNext(); // Check the next file
+                checkNext();
             };
-
             img.onerror = function () {
-                foundAll = true; // Stop when a missing file is found
+                if (images.length > 0) {
+                    displayImage(currentIndex);
+                    startSlideshow();
+                } else {
+                    imageContainer.innerHTML = "<p>No images found.</p>";
+                }
             };
         }
-
         checkNext();
-
-        setTimeout(checkImages, 5000); // Check again in 5 seconds
     }
+
+    function displayImage(index) {
+        imageContainer.innerHTML = "";
+        let imgElement = document.createElement("img");
+        imgElement.src = images[index];
+        imgElement.style.width = "100%"; 
+        imgElement.style.maxHeight = "80vh"; 
+        imgElement.style.objectFit = "contain";
+        imgElement.style.display = "block";
+        imgElement.style.margin = "auto";
+        imageContainer.appendChild(imgElement);
+        createNavigation();
+    }
+
+    function createNavigation() {
+        document.querySelectorAll(".arrow").forEach(arrow => arrow.remove());
+        let leftArrow = document.createElement("div");
+        leftArrow.innerHTML = "&#10094;";
+        leftArrow.className = "arrow left";
+        leftArrow.onclick = function () {
+            prevImage();
+        };
+
+        let rightArrow = document.createElement("div");
+        rightArrow.innerHTML = "&#10095;";
+        rightArrow.className = "arrow right";
+        rightArrow.onclick = function () {
+            nextImage();
+        };
+
+        document.body.appendChild(leftArrow);
+        document.body.appendChild(rightArrow);
+    }
+
+    function nextImage() {
+        if (currentIndex < images.length - 1) {
+            currentIndex++;
+        } else {
+            currentIndex = 0; // Loop back to first image
+        }
+        displayImage(currentIndex);
+    }
+
+    function prevImage() {
+        if (currentIndex > 0) {
+            currentIndex--;
+        } else {
+            currentIndex = images.length - 1; // Loop to last image
+        }
+        displayImage(currentIndex);
+    }
+
+    function startSlideshow() {
+        slideshowInterval = setInterval(nextImage, 5000); // Change image every 5s
+    }
+
+    function stopSlideshow() {
+        clearInterval(slideshowInterval);
+    }
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "ArrowRight") {
+            stopSlideshow();
+            nextImage();
+        } else if (event.key === "ArrowLeft") {
+            stopSlideshow();
+            prevImage();
+        }
+    });
 
     checkImages();
 });
